@@ -3304,8 +3304,7 @@ class CTable extends Component {
         enabled: false,
         style: "is-warning",
         icon_only: true,
-        panel: 1,
-        private: true
+        panel: 1
       }, {
         name: "delete",
         icon: "delete",
@@ -3636,15 +3635,20 @@ class CTable extends Component {
           var w = self.props.server.CTableServer.login(l, p).then(w => {
             self.props.server.CTableServer.user_data().then(p => {
               console.log(p);
-              this.setState({
-                authentication: true,
-                auth_panel_show: false
-              });
-            });
+              if (p !== null) {
+                this.setState({
+                  authentication: true,
+                  authentication_user: p['user'],
+                  authentication_club_name: p['club_name'],
+                  auth_panel_show: false
+                });
+              }
+            }).catch(e => this.showError(e));
           });
         } else if (x === null) {
           console.log(x);
         } else {
+          console.log(x);
           this.setState({
             authentication: true,
             authentication_user: x['user'],
@@ -3657,6 +3661,7 @@ class CTable extends Component {
   }
   onAuthLogout() {
     this.props.server.CTableServer.logout();
+    this.hideAllEditors();
     this.setState({
       authentication: false,
       auth_menu_active: false,
@@ -4462,7 +4467,7 @@ class CTable extends Component {
       class: "ctable-button-row"
     }, h("div", {
       class: "ctable-button-row-left"
-    }, self.state.topline_buttons.filter(x => x.enabled && x.panel == 1 && (x.private ? self.state.authentication : true)).map(x => h("div", {
+    }, self.state.topline_buttons.filter(x => x.enabled && x.panel == 1 && (self.state.current_table.noauth_actions === undefined ? self.state.authentication : self.state.authentication === true ? true : self.state.current_table.noauth_actions.includes(x.name))).map(x => h("div", {
       class: "has-text-centered m-1",
       style: "display:inline-block;"
     }, h("button", {
@@ -4498,7 +4503,7 @@ class CTable extends Component {
       role: "menu"
     }, h("div", {
       class: "dropdown-content has-text-left"
-    }, self.state.topline_buttons.filter(x => x.enabled && x.panel == 1).map(x => h("a", {
+    }, self.state.topline_buttons.filter(x => x.enabled && x.panel == 1 && (self.state.current_table.noauth_actions === undefined ? self.state.authentication : self.state.authentication === true ? true : self.state.current_table.noauth_actions.includes(x.name))).map(x => h("a", {
       class: cls("dropdown-item", "is-soft", x.style),
       "data-name": x.name,
       onClick: this.topButtonClick

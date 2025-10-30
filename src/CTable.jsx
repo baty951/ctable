@@ -91,7 +91,7 @@ class CTable extends Component {
 
         {name:"add", icon: "add", label:_("Add"), enabled: true, style:"is-primary", icon_only:true, panel:1, private:true},
         {name:"edit", icon: "edit", label:_("Edit"), enabled: false, style:"is-warning", icon_only:true, panel:1, private:true},
-        {name:"duplicate", icon: "content_copy", label:_("Duplicate"), enabled: false, style:"is-warning", icon_only:true, panel:1, private:true},
+        {name:"duplicate", icon: "content_copy", label:_("Duplicate"), enabled: false, style:"is-warning", icon_only:true, panel:1},
         {name:"delete", icon: "delete", label:_("Delete"), enabled: false, style:"is-danger", icon_only:true, panel:1, private:true},
 
         {name:"reload", icon: "refresh", label:_("Reload"), enabled: true, style:"", icon_only:true, panel:0},
@@ -351,20 +351,24 @@ class CTable extends Component {
              var w = self.props.server.CTableServer.login(l, p).then(w => {
              self.props.server.CTableServer.user_data().then( p => {
                  console.log(p);
-                 this.setState({authentication:true, auth_panel_show:false})
-             });
+                 if (p !== null){
+                 this.setState({authentication:true, authentication_user:p['user'], authentication_club_name:p['club_name'], auth_panel_show:false});
+                }
+             }).catch((e) => this.showError(e));
              });
          } else if (x === null) {
           console.log(x);
          } else {
+          console.log(x);
           this.setState({authentication:true, authentication_user:x['user'], authentication_club_name:x['club_name'], auth_panel_show:false})
          }
      })}
   }
 
   onAuthLogout(){
-    this.props.server.CTableServer.logout()
-    this.setState({authentication: false, auth_menu_active: false, authentication_user:null, authentication_club_name:null})
+    this.props.server.CTableServer.logout();
+    this.hideAllEditors();
+    this.setState({authentication: false, auth_menu_active: false, authentication_user:null, authentication_club_name:null});
   }
 
   topButtonClick(e) {
@@ -1015,7 +1019,7 @@ class CTable extends Component {
         </div>
         <div class="ctable-button-row">
           <div class="ctable-button-row-left">
-            {self.state.topline_buttons.filter(x => x.enabled  && x.panel == 1 && (x.private ? self.state.authentication : true)).map(x =>
+            {self.state.topline_buttons.filter(x => x.enabled  && x.panel == 1 && (self.state.current_table.noauth_actions === undefined ? self.state.authentication : (self.state.authentication === true ? true : self.state.current_table.noauth_actions.includes(x.name)))).map(x =>
               <div class="has-text-centered m-1"  style="display:inline-block;">
               <button class={cls("button","is-small","is-soft",x.style)} data-name={x.name} onClick={this.topButtonClick} title={x.label} data-table={x.table}><span class="material-symbols-outlined">{x.icon}</span>{x.icon_only ? "" : " "+x.label}</button>
               </div>
@@ -1031,7 +1035,7 @@ class CTable extends Component {
               </div>
               <div class="dropdown-menu" id="dropdown-menu-panel1" role="menu">
                 <div class="dropdown-content has-text-left">
-                  {self.state.topline_buttons.filter(x => x.enabled  && x.panel == 1).map(x =>
+                  {self.state.topline_buttons.filter(x => x.enabled  && x.panel == 1 && (self.state.current_table.noauth_actions === undefined ? self.state.authentication : (self.state.authentication === true ? true : self.state.current_table.noauth_actions.includes(x.name)))).map(x =>
                     <a class={cls("dropdown-item", "is-soft", x.style)} data-name={x.name} onClick={this.topButtonClick}><span class="material-symbols-outlined-small">{x.icon}</span> {x.label}</a>
                   )}
                 </div>
